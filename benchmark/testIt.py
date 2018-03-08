@@ -2,26 +2,28 @@ import time
 import psutil
 import subprocess
 import os
-from shutil import copyfile
-from filecmp import cmpfiles
-from pickle import FALSE
 
 def RunExe(fileName, outputFileName):
     procesObject = subprocess.Popen([fileName, outputFileName, "Quick"])
     pid = procesObject.pid
     psUtilObject = psutil.Process(pid)
-    psUtilObject.cpu_percent()
     cpuUse = []
+    memoryList = []
     keepLooping = True
     while keepLooping:
         try:
             cpuPercent = psUtilObject.cpu_percent()
+            memory = psUtilObject.memory_info().rss
+            
+            memoryList.append(memory)
             cpuUse.append(cpuPercent)
+            if 0 == len(cpuUse) % 50:
+                print len(cpuUse)
             time.sleep(1)
         except:
             keepLooping = False
 
-    return cpuUse
+    return cpuUse, memoryList
 
 print "starting..."
 
@@ -37,7 +39,11 @@ def CreateDictFromFile(filePath, delimiter):
     return dict
         
 def CmpFiles(file1, file2):
-    d1 = CreateDictFromFile(file1, ',')
+    try:
+        d1 = CreateDictFromFile(file1, ',')
+    except:
+        print "failed to creact dictionary for file " + file1
+        return False
     d2 = CreateDictFromFile(file2, ',')
     
     d1_keys = set(d1.keys())
@@ -49,17 +55,22 @@ def CmpFiles(file1, file2):
     same = set(o for o in intersect_keys if d1[o] == d2[o])
     print "added = " + str(added)
     print "removed = " + str(removed)
-    return (0 == len(added) and 0 == len(removed))
+    return 0 == len(removed)
+#     return (0 == len(added) and 0 == len(removed))
 
 
 def WriteScanResFile(dirName, outputFileName, expectedFileName, counter):
     scanResualtFileName = dirName + "\\scan_resualte_" + str(counter) + ".txt"
-    expectedDict = CreateDictFromFile(expectedFileName, ',')
+    try:
+        expectedDict = CreateDictFromFile(expectedFileName, ',')
+    except:
+        print "failed to creact dictionary for file " + expectedFileName
+    
     realDict = CreateDictFromFile(outputFileName, ',')
     scanResualtsFile = open(scanResualtFileName, 'a')
-    for threat in realDict:
+    for threat in expectedDict:
         scanResualtsFile.write(threat)
-        if threat in expectedDict:
+        if threat in realDict:
             scanResualtsFile.write('-find')
         else:
             scanResualtsFile.write('-didnt find')
@@ -67,45 +78,81 @@ def WriteScanResFile(dirName, outputFileName, expectedFileName, counter):
     
     scanResualtsFile.close()
 
+
+def WriteListToFile(fileName, currentList):
+    cpuFile = open(fileName, 'a')
+    cpuFile.write('0.0')
+    for sample in currentList:
+        cpuFile.write(',' + str(sample))
+    
+    cpuFile.write('\n')
+    cpuFile.close()
+
+def DeletCachFoldertContent(folder):
+    for the_file in os.listdir(folder):
+        file_path = os.path.join(folder, the_file)
+        try:
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
+            #elif os.path.isdir(file_path): shutil.rmtree(file_path)
+        except Exception as e:
+            print(e)
+
 def TestSpecigicDLL(dllName):
     #replace the dll to the new one
 #     engineDllPlace = "C:\\git\\rsEngineG2\\rsEngine.Tester\\bin\\Debug\\rsEngine.dll"
 #     copyfile(dllName, engineDllPlace)
 
-    dirName = time.strftime("%Y%m%d%H%M%S", time.gmtime())
-    if not os.path.exists(dirName):
-        os.makedirs(dirName)
+    mainDirName = "..\\scanRes\\" + time.strftime("%Y%m%d%H%M%S", time.gmtime())
+    if not os.path.exists(mainDirName):
+        os.makedirs(mainDirName)
     
-    fileName = "C:\\git\\rsEngineG2\\rsEngine.Tester\\bin\\Debug\\rsEngine.Tester.exe"
-    #fileName = "dummyFile.py"
-    outputFileName = dirName + "\\runOutput"
-    expectedFileName = "katamonOutput-expected.txt"
-    cpuUseFileName = dirName + "\\cpu_use.txt"
-    runAmount = 5
-    runDetailsFileName = dirName + "\\run details.txt"
+    folder = "C:\\git\\rsEngineG2\\rsEngine.Tester\\bin\\Debug\\"
+    fileName = folder + "rsEngine.Tester.exe" 
+    cachFolder = folder + "Cache"
+    deleteCach = True
     
-    for i in range(runAmount):
-        print "run number: " + str(i)
-        start = time.time()
-        cpuUse = RunExe(fileName, outputFileName + "_" + str(i) + ".txt")
-        end = time.time()
-        duration = end - start
-        
-        runDetailsFile = open(runDetailsFileName, 'a')
-        isCorrect = CmpFiles(outputFileName, expectedFileName)
-        runDetailsFile.write('run number: ' + str(i) + str(duration) + ',' + isCorrect + '\n')
-        runDetailsFile.close()
-        
-#         cpuUseFileName = dirName + "\\cpu_use_" + str(i) + ".txt"
-        cpuFile = open(cpuUseFileName, 'a')
-        cpuFile.write('0.0')
-        for sample in cpuUse:
-            cpuFile.write(',' + str(sample))
-        cpuFile.write('\n')
-        cpuFile.close()
-        
-        #WriteScanResFile(dirName, outputFileName, expectedFileName, i)
-        
+
+    subFolders = ["noCach", "withCach"]
+    for subFolder in subFolders:
+        if "noCach" == subFolder:
+            deleteCach = True
+        else:
+            deleteCach = False
+            
+        dirName = mainDirName + "\\" + subFolder
+        if not os.path.exists(dirName):
+            os.makedirs(dirName)
+        expectedFileName = "expected.txt"
+        cpuUseFileName = dirName + "\\cpu_use.txt"
+        memoryUseFileName = dirName + "\\memory_use.txt"
+        runAmount = 10
+        runDetailsFileName = dirName + "\\run details.txt"
+        for i in range(runAmount):
+            print "run number: " + str(i)
+            if deleteCach:
+                DeletCachFoldertContent(cachFolder)
+            outputFileName = dirName + "\\runOutput"  + "_" + str(i) + ".txt"
+            start = time.time()
+            cpuUse, memoryUsage = RunExe(fileName, outputFileName)
+            end = time.time()
+            duration = end - start
+            
+            runDetailsFile = open(runDetailsFileName, 'a')
+            isCorrect = CmpFiles(outputFileName, expectedFileName)
+            if isCorrect:
+                isCorrect = "good scan"
+            else:
+                isCorrect = "bad scan"
+                
+            runDetailsFile.write('run number: ' + str(i) + "," + str(duration) + ',' + isCorrect + '\n')
+            runDetailsFile.close()
+            
+            #write cpu file
+            WriteListToFile(cpuUseFileName, cpuUse)
+            WriteListToFile(memoryUseFileName, memoryUsage)
+            WriteScanResFile(dirName, outputFileName, expectedFileName, i)
+            
     #CmpFiles(outputFileName, expectedFileName)
     
     
@@ -116,6 +163,6 @@ def TestSpecigicDLL(dllName):
     # print "max: " + str(max)
     # print "avg: " + str(avg)
 if __name__ == '__main__':
-    print "rak hapoel"
+    print "start the benchmark environment"
     TestSpecigicDLL("dllName")
     

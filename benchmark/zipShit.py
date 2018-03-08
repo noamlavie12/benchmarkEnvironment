@@ -4,7 +4,7 @@ from zipfile import ZipFile
 
 print "Auto extractor for compressed malware"
 
-rootPath = "C:\Users\Noam Lavie\Downloads\\theZoo-master"
+rootPath = "C:\\Users\\Noam Lavie\\Downloads\\theZoo-master"
 
 print "Iterating over: " + rootPath
 failedPaths = []
