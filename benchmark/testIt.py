@@ -2,9 +2,12 @@ import time
 import psutil
 import subprocess
 import os
+import sys
+from shutil import copyfile
 
 def RunExe(fileName, outputFileName):
     procesObject = subprocess.Popen([fileName, outputFileName, "Quick"])
+#     procesObject = subprocess.Popen([fileName, outputFileName, "Full"])
     pid = procesObject.pid
     psUtilObject = psutil.Process(pid)
     cpuUse = []
@@ -89,31 +92,33 @@ def WriteListToFile(fileName, currentList):
     cpuFile.close()
 
 def DeletCachFoldertContent(folder):
-    for the_file in os.listdir(folder):
-        file_path = os.path.join(folder, the_file)
-        try:
-            if os.path.isfile(file_path):
-                os.unlink(file_path)
-            #elif os.path.isdir(file_path): shutil.rmtree(file_path)
-        except Exception as e:
-            print(e)
+    if os.path.exists(folder):
+        for the_file in os.listdir(folder):
+            file_path = os.path.join(folder, the_file)
+            try:
+                if os.path.isfile(file_path):
+                    os.unlink(file_path)
+                #elif os.path.isdir(file_path): shutil.rmtree(file_path)
+            except Exception as e:
+                print(e)
 
-def TestSpecigicDLL(dllName):
-    #replace the dll to the new one
-#     engineDllPlace = "C:\\git\\rsEngineG2\\rsEngine.Tester\\bin\\Debug\\rsEngine.dll"
-#     copyfile(dllName, engineDllPlace)
+def TestSpecigicDLL(rsEnginePath, testPath):
 
     mainDirName = "..\\scanRes\\" + time.strftime("%Y%m%d%H%M%S", time.gmtime())
     if not os.path.exists(mainDirName):
         os.makedirs(mainDirName)
     
-    folder = "C:\\git\\rsEngineG2\\rsEngine.Tester\\bin\\Debug\\"
-    fileName = folder + "rsEngine.Tester.exe" 
-    cachFolder = folder + "Cache"
+#     folder = "C:\\git\\katamon\\rsEngineG2\\rsEngine.Tester\\bin\\Debug\\"
+    fileName = rsEnginePath + "rsEngine.Tester.exe" 
+    copyfile(testPath, fileName)
+    
+    
+    cachFolder = rsEnginePath + "Cache"
     deleteCach = True
     
 
     subFolders = ["noCach", "withCach"]
+    subFolders = ["withCach"]
     for subFolder in subFolders:
         if "noCach" == subFolder:
             deleteCach = True
@@ -163,6 +168,14 @@ def TestSpecigicDLL(dllName):
     # print "max: " + str(max)
     # print "avg: " + str(avg)
 if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print "bad input, less than 2 argumants"
+    
+    dllpath = sys.argv[1]
+    testPath = sys.argv[2]
+    
+#     dllpath = "C:\\git\\katamon\\rsEngineG2\\rsEngine.Tester\\bin\\Debug\\"
+#     testPath = "C:\\git\\python\\dlls\\rsEngine.Tester.exe"
     print "start the benchmark environment"
-    TestSpecigicDLL("dllName")
+    TestSpecigicDLL(dllpath, testPath)
     
