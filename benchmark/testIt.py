@@ -111,7 +111,7 @@ def TestSpecigicDLL(rsEnginePath, testPath):
         os.makedirs(mainDirName)
     
 #     folder = "C:\\git\\katamon\\rsEngineG2\\rsEngine.Tester\\bin\\Debug\\"
-    fileName = rsEnginePath + "rsEngine.Tester.exe" 
+    fileName = rsEnginePath + "\\rsEngine.Tester.exe" 
     copyfile(testPath, fileName)
     
     
