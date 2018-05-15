@@ -5,6 +5,8 @@ import os
 import sys
 from shutil import copyfile
 
+scriptPath = os.path.dirname(os.path.abspath(__file__)) + "\\"
+
 def RunExe(fileName, outputFileName):
     procesObject = subprocess.Popen([fileName, outputFileName, "Quick"])
 #     procesObject = subprocess.Popen([fileName, outputFileName, "Full"])
@@ -45,7 +47,7 @@ def CmpFiles(file1, file2):
     try:
         d1 = CreateDictFromFile(file1, ',')
     except:
-        print "failed to creact dictionary for file " + file1
+        print "failed to creat dictionary for file " + file1
         return False
     d2 = CreateDictFromFile(file2, ',')
     
@@ -67,7 +69,7 @@ def WriteScanResFile(dirName, outputFileName, expectedFileName, counter):
     try:
         expectedDict = CreateDictFromFile(expectedFileName, ',')
     except:
-        print "failed to creact dictionary for file " + expectedFileName
+        print "failed to creat dictionary for file " + expectedFileName
     
     realDict = CreateDictFromFile(outputFileName, ',')
     scanResualtsFile = open(scanResualtFileName, 'a')
@@ -104,7 +106,7 @@ def DeletCachFoldertContent(folder):
 
 def TestSpecigicDLL(rsEnginePath, testPath):
 
-    mainDirName = "..\\scanRes\\" + time.strftime("%Y%m%d%H%M%S", time.gmtime())
+    mainDirName = scriptPath + "..\\scanRes\\" + time.strftime("%Y%m%d%H%M%S", time.gmtime())
     if not os.path.exists(mainDirName):
         os.makedirs(mainDirName)
     
@@ -118,7 +120,7 @@ def TestSpecigicDLL(rsEnginePath, testPath):
     
 
     subFolders = ["noCach", "withCach"]
-    subFolders = ["withCach"]
+    #subFolders = ["withCach"]
     for subFolder in subFolders:
         if "noCach" == subFolder:
             deleteCach = True
@@ -128,7 +130,7 @@ def TestSpecigicDLL(rsEnginePath, testPath):
         dirName = mainDirName + "\\" + subFolder
         if not os.path.exists(dirName):
             os.makedirs(dirName)
-        expectedFileName = "expected.txt"
+        expectedFileName = scriptPath + "expected.txt"
         cpuUseFileName = dirName + "\\cpu_use.txt"
         memoryUseFileName = dirName + "\\memory_use.txt"
         runAmount = 10
@@ -173,7 +175,6 @@ if __name__ == '__main__':
     
     dllpath = sys.argv[1]
     testPath = sys.argv[2]
-    
 #     dllpath = "C:\\git\\katamon\\rsEngineG2\\rsEngine.Tester\\bin\\Debug\\"
 #     testPath = "C:\\git\\python\\dlls\\rsEngine.Tester.exe"
     print "start the benchmark environment"
