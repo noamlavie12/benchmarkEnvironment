@@ -47,9 +47,14 @@ def CmpFiles(file1, file2):
     try:
         d1 = CreateDictFromFile(file1, ',')
     except:
-        print "failed to creat dictionary for file " + file1
+        print "failed to create dictionary for file " + file1
         return False
-    d2 = CreateDictFromFile(file2, ',')
+    
+    try:
+        d2 = CreateDictFromFile(file2, ',')
+    except:
+        print "failed to create dictionary for file " + file2
+        return False
     
     d1_keys = set(d1.keys())
     d2_keys = set(d2.keys())
@@ -120,7 +125,7 @@ def TestSpecigicDLL(rsEnginePath, testPath):
     
 
     subFolders = ["noCach", "withCach"]
-    #subFolders = ["withCach"]
+#     subFolders = ["withCach"]
     for subFolder in subFolders:
         if "noCach" == subFolder:
             deleteCach = True
@@ -151,8 +156,12 @@ def TestSpecigicDLL(rsEnginePath, testPath):
                 isCorrect = "good scan"
             else:
                 isCorrect = "bad scan"
-                
-            runDetailsFile.write('run number: ' + str(i) + "," + str(duration) + ',' + isCorrect + '\n')
+            
+            cpuAvg = reduce(lambda x, y: x + y, cpuUse) / len(cpuUse);
+            memoryAvg = reduce(lambda x, y: x + y, memoryUsage) / len(memoryUsage);
+
+    
+            runDetailsFile.write('run number: ' + str(i) + "," + str(duration) + ',' + isCorrect + ',' + str(cpuAvg) + ',' + str(memoryAvg) +'\n')
             runDetailsFile.close()
             
             #write cpu file
