@@ -139,7 +139,7 @@ def TestSpecigicDLL(rsEnginePath, testPath):
         cpuUseFileName = dirName + "\\cpu_use.txt"
         memoryUseFileName = dirName + "\\memory_use.txt"
         runAmount = 10
-        runDetailsFileName = dirName + "\\run details.txt"
+        runDetailsFileName = dirName + "\\" + subFolder + "RunDetails.txt"
         for i in range(runAmount):
             print "run number: " + str(i)
             if deleteCach:
