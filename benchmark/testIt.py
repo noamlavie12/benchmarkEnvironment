@@ -8,7 +8,7 @@ from shutil import copyfile
 scriptPath = os.path.dirname(os.path.abspath(__file__)) + "\\"
 
 def RunExe(fileName, outputFileName):
-    procesObject = subprocess.Popen([fileName, outputFileName, "Quick"])
+    procesObject = subprocess.Popen([fileName, outputFileName, "Quick"], shell=True)
 #     procesObject = subprocess.Popen([fileName, outputFileName, "Full"])
     pid = procesObject.pid
     psUtilObject = psutil.Process(pid)
