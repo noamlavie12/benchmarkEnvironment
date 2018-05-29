@@ -6,7 +6,8 @@ import sys
 from shutil import copyfile
 
 scriptPath = os.path.dirname(os.path.abspath(__file__)) + "\\"
-
+maxTimeToRun = 3000
+# maxTimeToRun = 3
 def RunExe(fileName, outputFileName):
     procesObject = subprocess.Popen([fileName, outputFileName, "Quick"], shell=True)
 #     procesObject = subprocess.Popen([fileName, outputFileName, "Full"])
@@ -22,6 +23,9 @@ def RunExe(fileName, outputFileName):
             
             memoryList.append(memory)
             cpuUse.append(cpuPercent)
+            if len(cpuUse) > maxTimeToRun:
+                os.system("taskkill /f /im rsEngine.Tester.exe")
+                return [],[]
             if 0 == len(cpuUse) % 50:
                 print len(cpuUse)
             time.sleep(1)
@@ -119,10 +123,8 @@ def TestSpecigicDLL(rsEnginePath, testPath):
     fileName = rsEnginePath + "\\rsEngine.Tester.exe" 
     copyfile(testPath, fileName)
     
-    
     cachFolder = rsEnginePath + "Cache"
     deleteCach = True
-    
 
     subFolders = ["noCach", "withCach"]
 #     subFolders = ["withCach"]
@@ -151,26 +153,31 @@ def TestSpecigicDLL(rsEnginePath, testPath):
             duration = end - start
             
             runDetailsFile = open(runDetailsFileName, 'a')
-            isCorrect = CmpFiles(outputFileName, expectedFileName)
-            if isCorrect:
-                isCorrect = "good scan"
-            else:
-                isCorrect = "bad scan"
+            if 0 == len(cpuUse):
+                isCorrect = "scan didn't complete in time"
+            else
+                isCorrect = CmpFiles(outputFileName, expectedFileName)
+                if isCorrect:
+                    isCorrect = "good scan"
+                else:
+                    isCorrect = "bad scan"
             
-            cpuAvg = reduce(lambda x, y: x + y, cpuUse) / len(cpuUse);
-            memoryAvg = reduce(lambda x, y: x + y, memoryUsage) / len(memoryUsage);
+            cpuAvg = memoryAvg = 0
+            if 0 < len(cpuUse):
+                cpuAvg = reduce(lambda x, y: x + y, cpuUse) / len(cpuUse);
+                memoryAvg = reduce(lambda x, y: x + y, memoryUsage) / len(memoryUsage);
 
     
             runDetailsFile.write('run number: ' + str(i) + "," + str(duration) + ',' + isCorrect + ',' + str(cpuAvg) + ',' + str(memoryAvg) +'\n')
             runDetailsFile.close()
             
-            #write cpu file
-            WriteListToFile(cpuUseFileName, cpuUse)
-            WriteListToFile(memoryUseFileName, memoryUsage)
-            WriteScanResFile(dirName, outputFileName, expectedFileName, i)
+            #write cpu file id scan was successfull
+            if 0 < len(cpuUse):
+                WriteListToFile(cpuUseFileName, cpuUse)
+                WriteListToFile(memoryUseFileName, memoryUsage)
+                WriteScanResFile(dirName, outputFileName, expectedFileName, i)
             
     #CmpFiles(outputFileName, expectedFileName)
-    
     
     
     # max = max(cpuUse)
