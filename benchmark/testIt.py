@@ -155,7 +155,7 @@ def TestSpecigicDLL(rsEnginePath, testPath):
             runDetailsFile = open(runDetailsFileName, 'a')
             if 0 == len(cpuUse):
                 isCorrect = "scan didn't complete in time"
-            else
+            else:
                 isCorrect = CmpFiles(outputFileName, expectedFileName)
                 if isCorrect:
                     isCorrect = "good scan"
